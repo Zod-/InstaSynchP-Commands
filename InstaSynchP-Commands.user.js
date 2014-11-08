@@ -23,6 +23,8 @@ function Commands(version) {
     this.version = version;
     this.name = "InstaSynchP Commands";
     this.commandMap = {};
+    this.sendcmdReady = true;
+    this.commandQueue = [];
 }
 
 Commands.prototype.executeOnceCore = function () {
@@ -31,6 +33,10 @@ Commands.prototype.executeOnceCore = function () {
     window.commands = {
         //add a command
         bind: function (commands) {
+            if (typeof commands === 'undefined') {
+                return;
+            }
+
             for (var command in commands) {
                 if (commands.hasOwnProperty(command)) {
                     commands[command].name = command;
@@ -46,19 +52,15 @@ Commands.prototype.executeOnceCore = function () {
         getAll: function () {
             return th.commandMap;
         },
-        //get command info
-        description: function (key) {
-            return th.commandMap[key].description;
-        },
         //execute a command
-        execute: function (key, args) {
-            key = key.toLowerCase();
-            if (th.commandMap.hasOwnProperty(key)) {
+        execute: function () {
+            if (th.commandMap.hasOwnProperty(arguments[0].toLowerCase())) {
                 //send the event to the site
                 window.postMessage(JSON.stringify({
                     action: 'ExecuteCommand',
                     data: {
-                        parameters: args
+                        //turn arguments to array
+                        'arguments': [].slice.call(arguments)
                     }
                 }), "*");
             }
@@ -66,14 +68,14 @@ Commands.prototype.executeOnceCore = function () {
     };
 
     /*{
-        "'command" = {
+        "'command": {
             'hasArguments':true,
             'type':'mod',
-            'sendToChat':false,
+            'reference': this
             'description':'description',
             'callback': function(){
             }
-        };
+        }
     }*/
 
     var defaultCommands = {
@@ -107,14 +109,14 @@ Commands.prototype.executeOnceCore = function () {
     };
 
     function empty() {
-        return undefined;
+            return undefined;
     }
     //prepare default commands
     for (var command in defaultCommands) {
         if (defaultCommands.hasOwnProperty(command)) {
             defaultCommands[command].description = 'http://instasynch.com/help.php#commands';
             defaultCommands[command].callback = empty;
-            defaultCommands[command].sendToChat = false;
+
             if (!defaultCommands[command].type) {
                 defaultCommands[command].type = 'regular';
             }
@@ -126,18 +128,44 @@ Commands.prototype.executeOnceCore = function () {
     //commands gets executed by posting a message to the site and catching it
     //in the script scope
     events.on(th, 'ExecuteCommand', function (data) {
-        var command = th.commandMap[data.parameters[0].toLowerCase()];
-        command.callback(data.parameters);
-        if (!command.sendToChat) {
-            $('#cin').val('');
-        }
+        var command = th.commandMap[data.arguments[0].toLowerCase()];
+        command.callback.apply(command.reference, data.arguments);
     });
     events.on(th, 'SendChat', function (message) {
-        var params = message.split(' ');
-        commands.execute(params[0], params);
+        commands.execute.apply(commands, message.split(/\s/));
     });
-};
 
+    //load flood protect
+    var oldsendcmd = window.global.sendcmd;
+    window.global.sendcmd = function (command, data) {
+        var i;
+        if (command) {
+            //add the command to the cache
+            th.commandQueue.push({
+                command: command,
+                data: data
+            });
+        }
+
+        //early return if we can't send anything
+        if (!th.sendcmdReady || th.commandQueue.length === 0) {
+            return;
+        }
+
+        //set not ready
+        th.sendcmdReady = false;
+        //send and remove the last 4 commands
+        for(i = 0; i < 4 && th.commandQueue.length > 0; i += 1){
+            oldsendcmd(th.commandQueue[0].command, th.commandQueue[0].data);
+            th.commandQueue.splice(0, 1);
+        }
+        //after a second send the next ones
+        setTimeout(function () {
+            th.sendcmdReady = true;
+            window.global.sendcmd();
+        }, 1010);
+    };
+};
 
 window.plugins = window.plugins || {};
 window.plugins.commands = new Commands('1');

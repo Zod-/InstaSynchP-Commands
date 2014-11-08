@@ -3,6 +3,58 @@ InstaSynchP-Commands
 
 Plugin for custom commands
 
+Framework
+---------
+The `commands` object can be used to bind custom commands, grab information and execute on them.
+Commands will be queued so the user doesn't get disconneted for flood detection. Every 1 second 4 commands will be sent.
+
+The core will automatically load commands from `this.commands` when it loads e.g.:
+```javascript
+this.commands = {
+    "'command": {
+        'hasArguments': true,
+        'type': 'mod',
+        'reference': this,
+        'description': 'description',
+        'callback': this.execute
+    }
+};
+```
+
+#### `commands.bind`
+```javascript
+commands.bind({
+    "'command": {
+        'hasArguments': true,
+        'type': 'mod',
+        'reference': this,
+        'description': 'description',
+        'callback': function(){
+            //logic
+        }
+    }
+});
+```
+Commands with `hasArguments: true` will be instantly sent to chat when using autocomplete and `type: mod` commands will only show up when you are a mod.
+#### `commands.get`
+```javascript
+commands.get("'command");
+```
+#### `commands.getAll`
+```javascript
+commands.getAll();
+```
+#### `commands.execute`
+```javascript
+commands.execute("'command", 'arg1', 'arg2');
+```
+
+Public Variables
+---------
+* `commands.commandMap` containing all the bound commands
+* `commands.commandQueue` queue containing the to be sent commands
+
+
 License
 -----------
 The MIT License (MIT)<br>

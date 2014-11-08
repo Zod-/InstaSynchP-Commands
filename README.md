@@ -5,7 +5,7 @@ Plugin for custom commands
 
 Framework
 ---------
-The `commands` object can be used to bind custom commands, grab information and execute on them.
+The `commands` object can be used to bind custom commands, grab information and execute them.
 Commands will be queued so the user doesn't get disconneted for flood detection. Every 1 second 4 commands will be sent.
 
 The core will automatically load commands from `this.commands` when it loads e.g.:

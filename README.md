@@ -20,6 +20,14 @@ this.commands = {
     }
 };
 ```
+The first argument of the callback function will be an object of some pre parsed arguments:
+```javascript
+opts = {
+    usernames: [], //arguments that will fit the username regex
+    videos: [], //arguments that could be parsed with the urlParser
+    numbers: [] //arguments that are numbers
+}
+```
 
 #### `commands.bind`
 ```javascript

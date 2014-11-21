@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Plugin for custom commands
 
-// @version     1
+// @version     1.0.1
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Commands
 // @license     MIT
@@ -110,8 +110,8 @@ Commands.prototype.executeOnceCore = function () {
 
     function empty() {
             return undefined;
-    }
-    //prepare default commands
+        }
+        //prepare default commands
     for (var command in defaultCommands) {
         if (defaultCommands.hasOwnProperty(command)) {
             defaultCommands[command].description = 'http://instasynch.com/help.php#commands';
@@ -128,7 +128,27 @@ Commands.prototype.executeOnceCore = function () {
     //commands gets executed by posting a message to the site and catching it
     //in the script scope
     events.on(th, 'ExecuteCommand', function (data) {
-        var command = th.commandMap[data.arguments[0].toLowerCase()];
+        var command = th.commandMap[data.arguments[0].toLowerCase()],
+            opts = {
+                usernames: [],
+                videos: [],
+                numbers: []
+            },
+            i,
+            videoInfo;
+        for (i = 1; i < data.arguments.length; i += 1) {
+            videoInfo = urlParser.parse(data.arguments[i]);
+            if(videoInfo){
+                opts.videos.push(videoInfo);
+            }
+            if(isBlackname(data.arguments[i])){
+                opts.usernames.push(data.arguments[i]);
+            }
+            if(data.arguments[i] !== '' && !isNaN(data.arguments[i])){
+                opts.numbers.push(Number(data.arguments[i]));
+            }
+        }
+        data.arguments.splice(0, 1, opts);
         command.callback.apply(command.reference, data.arguments);
     });
     events.on(th, 'SendChat', function (message) {
@@ -155,7 +175,7 @@ Commands.prototype.executeOnceCore = function () {
         //set not ready
         th.sendcmdReady = false;
         //send and remove the last 4 commands
-        for(i = 0; i < 4 && th.commandQueue.length > 0; i += 1){
+        for (i = 0; i < 4 && th.commandQueue.length > 0; i += 1) {
             oldsendcmd(th.commandQueue[0].command, th.commandQueue[0].data);
             th.commandQueue.splice(0, 1);
         }
@@ -168,4 +188,4 @@ Commands.prototype.executeOnceCore = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.commands = new Commands('1');
+window.plugins.commands = new Commands('1.0.1');

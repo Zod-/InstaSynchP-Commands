@@ -3,15 +3,13 @@
 // @namespace   InstaSynchP
 // @description Plugin for custom commands
 
-// @version     1.0.1
+// @version     1.0.2
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Commands
 // @license     MIT
 
-// @include     http://*.instasynch.com/*
-// @include     http://instasynch.com/*
-// @include     http://*.instasync.com/*
-// @include     http://instasync.com/*
+// @include     *://instasync.com/r/*
+// @include     *://*.instasync.com/r/*
 // @grant       none
 // @run-at      document-start
 
@@ -149,15 +147,16 @@ Commands.prototype.executeOnceCore = function () {
             }
         }
         data.arguments.splice(0, 1, opts);
+        logger().debug(th.name, "Calling command",JSON.stringify(data.arguments));
         command.callback.apply(command.reference, data.arguments);
     });
     events.on(th, 'SendChat', function (message) {
         commands.execute.apply(commands, message.split(/\s/));
     });
 
-    //load flood protect
-    var oldsendcmd = window.global.sendcmd;
-    window.global.sendcmd = function (command, data) {
+    //flood protect
+    var oldsendcmd = window.room.sendcmd;
+        window.room.sendcmd = function (command, data) {
         var i;
         if (command) {
             //add the command to the cache
@@ -174,18 +173,15 @@ Commands.prototype.executeOnceCore = function () {
 
         //set not ready
         th.sendcmdReady = false;
-        //send and remove the last 4 commands
-        for (i = 0; i < 4 && th.commandQueue.length > 0; i += 1) {
-            oldsendcmd(th.commandQueue[0].command, th.commandQueue[0].data);
-            th.commandQueue.splice(0, 1);
-        }
+        oldsendcmd(th.commandQueue[0].command, th.commandQueue[0].data);
+        th.commandQueue.splice(0, 1);
         //after a second send the next ones
         setTimeout(function () {
             th.sendcmdReady = true;
-            window.global.sendcmd();
-        }, 1010);
+            window.room.sendcmd();
+        }, 275);
     };
 };
 
 window.plugins = window.plugins || {};
-window.plugins.commands = new Commands('1.0.1');
+window.plugins.commands = new Commands('1.0.2');

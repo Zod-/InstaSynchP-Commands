@@ -3,7 +3,7 @@
 // @namespace   InstaSynchP
 // @description Plugin for custom commands
 
-// @version     1.0.2
+// @version     1.0.3
 // @author      Zod-
 // @source      https://github.com/Zod-/InstaSynchP-Commands
 // @license     MIT
@@ -13,7 +13,7 @@
 // @grant       none
 // @run-at      document-start
 
-// @require     https://greasyfork.org/scripts/5647-instasynchp-library/code/InstaSynchP%20Library.js?version=37716
+// @require     https://greasyfork.org/scripts/5647-instasynchp-library/code/InstaSynchP%20Library.js?version=49210
 // ==/UserScript==
 
 function Commands(version) {
@@ -114,6 +114,13 @@ Commands.prototype.executeOnceCore = function () {
       'hasArguments': true,
       'type': 'mod'
     },
+    "'shuffle": {
+      'hasArguments': true,
+      'type': 'mod',
+      'callback': function (){
+        sendcmd('shuffle');
+      }
+    },
     "'pause": {
       'type': 'mod'
     },
@@ -160,7 +167,7 @@ Commands.prototype.executeOnceCore = function () {
   for (var command in defaultCommands) {
     if (defaultCommands.hasOwnProperty(command)) {
       defaultCommands[command].description = 'http://instasynch.com/help.php#commands';
-      defaultCommands[command].callback = empty;
+      defaultCommands[command].callback = defaultCommands[command].callback || empty;
 
       if (!defaultCommands[command].type) {
         defaultCommands[command].type = 'regular';
@@ -231,4 +238,4 @@ Commands.prototype.executeOnceCore = function () {
 };
 
 window.plugins = window.plugins || {};
-window.plugins.commands = new Commands('1.0.2');
+window.plugins.commands = new Commands('1.0.3');
